@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>2026社保公积金基数速查表</title>
+<style>
+  :root{
+    --bg:#f5f7fa; --card:#ffffff; --ink:#1f2937; --sub:#6b7280;
+    --line:#e5e7eb; --brand:#2563eb; --brand-d:#1d4ed8;
+    --dark:#111827; --gray:#9ca3af; --hl:#fff7cc; --hl-b:#fde68a;
+    --ok:#16a34a; --warn:#d97706; --shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+    background:var(--bg);color:var(--ink);font-size:14px;line-height:1.5;}
+  header.top{background:linear-gradient(135deg,#1e3a8a,#2563eb);color:#fff;padding:18px 22px;}
+  header.top h1{margin:0;font-size:20px;font-weight:700;letter-spacing:.5px;}
+  header.top p{margin:4px 0 0;font-size:12px;opacity:.85;}
+  .wrap{max-width:1280px;margin:0 auto;padding:16px 18px 80px;}
+
+  /* 控制条 */
+  .controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:14px 0 6px;}
+  .controls input[type=search]{flex:1;min-width:200px;padding:9px 12px;border:1px solid var(--line);border-radius:8px;font-size:14px;}
+  .controls select{padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;font-size:13px;}
+  .btn{padding:9px 14px;border:1px solid var(--line);background:#fff;border-radius:8px;cursor:pointer;font-size:13px;color:var(--ink);}
+  .btn:hover{border-color:var(--brand);color:var(--brand);}
+  .btn.primary{background:var(--brand);color:#fff;border-color:var(--brand);}
+  .btn.primary:hover{background:var(--brand-d);color:#fff;}
+  .sortgrp{display:flex;gap:6px;align-items:center;font-size:12px;color:var(--sub);}
+  .sortgrp .btn{padding:7px 10px;}
+
+  /* 筛选标签 */
+  .tags{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 14px;}
+  .tag{padding:6px 13px;border:1px solid var(--line);border-radius:999px;background:#fff;cursor:pointer;font-size:13px;color:var(--sub);}
+  .tag.active{background:var(--brand);color:#fff;border-color:var(--brand);}
+
+  /* 卡片网格 */
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+  @media(max-width:900px){.grid{grid-template-columns:1fr;}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column;}
+  .card .chead{padding:12px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:8px;}
+  .card .chead .ttl{font-size:16px;font-weight:700;color:var(--dark);}
+  .card .minwage{padding:8px 14px;display:flex;align-items:center;gap:10px;background:#f8fafc;border-bottom:1px solid var(--line);font-size:13px;}
+  .card .minwage .mw-label{font-weight:600;color:var(--sub);white-space:nowrap;}
+  .card .minwage .ed{flex:1;padding:4px 8px;min-height:22px;}
+  .badge{font-size:11px;padding:2px 8px;border-radius:999px;white-space:nowrap;}
+  .badge.region{background:#e0e7ff;color:#3730a3;}
+  .badge.done{background:#dcfce7;color:#166534;}
+  .badge.todo{background:var(--hl);color:#92400e;border:1px solid var(--hl-b);}
+  .card table{width:100%;border-collapse:collapse;font-size:12.5px;}
+  .card th,.card td{border:1px solid var(--line);padding:6px 7px;text-align:center;vertical-align:middle;}
+  .card th{background:#f3f4f6;color:var(--sub);font-weight:600;font-size:11.5px;}
+  .card td.name{text-align:left;font-weight:600;background:#fafafa;color:var(--dark);white-space:nowrap;}
+  .c26{color:var(--dark);font-weight:700;}
+  .c25{color:var(--gray);font-weight:400;}
+  .todo-cell{background:#f3f4f6;color:#9ca3af;}
+  .todo-cell.empty{color:#9ca3af;}
+  .card .meta{padding:10px 14px;font-size:12px;color:var(--sub);border-top:1px solid var(--line);}
+  .card .meta div{margin:3px 0;}
+  .card .meta b{color:var(--ink);font-weight:600;}
+
+  /* 底部 */
+  .footer{max-width:1280px;margin:24px auto 0;padding:0 18px;color:var(--sub);font-size:12px;}
+  .footer .updated{font-weight:600;color:var(--ink);}
+  details.log{margin-top:8px;border:1px solid var(--line);border-radius:8px;background:#fff;padding:0 12px;}
+  details.log summary{cursor:pointer;padding:10px 0;font-weight:600;color:var(--brand-d);}
+  details.log ol{margin:0;padding:0 0 12px 20px;}
+  details.log li{padding:3px 0;}
+
+  /* 编辑浮窗 */
+  #toast{position:fixed;right:18px;bottom:18px;background:var(--dark);color:#fff;padding:10px 16px;border-radius:10px;
+    box-shadow:0 6px 20px rgba(0,0,0,.25);font-size:13px;opacity:0;transform:translateY(10px);transition:.3s;pointer-events:none;z-index:50;}
+  #toast.show{opacity:1;transform:translateY(0);}
+
+  .count{font-size:12px;color:var(--sub);margin:2px 0 10px;}
+  .count b{color:var(--ink);}
+  .synced{font-size:12px;color:var(--ok);margin-left:8px;}
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>2026社保公积金基数速查表</h1>
+  <p>覆盖 26 个城市 / 省份 · 养老保险 · 医疗保险（含生育） · 失业保险 · 工伤保险 · 住房公积金　<span style="display:inline-block;background:#dcfce7;color:#166534;padding:2px 10px;border-radius:999px;font-size:11px;font-weight:600;">数据每周更新</span></p>
+</header>
+
+<div class="wrap">
+  <div class="controls">
+    <input type="search" id="search" placeholder="🔍 按城市 / 省份名称搜索…" />
+    <span class="sortgrp">
+      排序：
+      <button class="btn" data-sort="up-desc">基数上限↓</button>
+      <button class="btn" data-sort="up-asc">基数上限↑</button>
+      <button class="btn" data-sort="low-desc">基数下限↓</button>
+      <button class="btn" data-sort="low-asc">基数下限↑</button>
+    </span>
+        <button class="btn primary" id="exportBtn">导出 CSV</button>
+  </div>
+
+
+  <div class="tags" id="tags"></div>
+  <div class="count" id="count"></div>
+
+  <div class="grid" id="grid"></div>
+</div>
+
+<div class="footer">
+  <div class="updated" id="lastUpdated">最后更新时间：—</div>
+  <p style="margin-top:10px">说明：数据来源：各地官方社保/公积金发布口径。本页仅供查看、搜索与排序，数据每周更新；如需修正或补充，请联系管理员。</p>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ============== 数据层（资料库 database 驱动，团队共享、实时同步） ============== */
+const DATABASE_ID = "XTIUcLy5mkLWrIvEmPoxxI";
+const db = null; /* 静态镜像：不建立数据库会话，数据内嵌于 FALLBACK_DATA */
+
+const INSURANCE = [
+  {key:"pension",     label:"养老保险"},
+  {key:"medical",     label:"医疗保险(含生育)"},
+  {key:"unemployment",label:"失业保险"},
+  {key:"injury",      label:"工伤保险"},
+  {key:"housing",     label:"住房公积金"}
+];
+const PREFIX = {pension:"养老",medical:"医疗",unemployment:"失业",injury:"工伤",housing:"公积金"};
+const SUF = {u26:"2026上限",l26:"2026下限",u25:"2025上限",l25:"2025下限",comp:"公司比例",pers:"个人比例"};
+function fieldName(t,f){ return PREFIX[t]+SUF[f]; }
+
+const META_MAP = {minWage:"最低基本工资",publish:"政策发布时间",effective:"生效时间",docNo:"公司社保和公积金比例",notes:"修改记录",minSalary:"最低工资"};
+
+let DATA = [];
+const FALLBACK_DATA = [{"name": "北京", "region": "直辖市", "minWage": "8,150", "ins": {"pension": {"u26": "36,348", "l26": "7,270", "u25": "35,811", "l25": "7,162", "comp": "16", "pers": "8"}, "medical": {"u26": "36,348", "l26": "7,270", "u25": "35,811", "l25": "7,162", "comp": "9.8", "pers": "2 (+3)", "persFixed": ""}, "unemployment": {"u26": "36,348", "l26": "7,270", "u25": "35,811", "l25": "7,162", "comp": "0.5", "pers": "0.5"}, "injury": {"u26": "36,348", "l26": "7,270", "u25": "35,811", "l25": "7,162", "comp": "0.2", "pers": "0"}, "housing": {"u26": "36,348", "l26": "2,540", "u25": "35,811", "l25": "2,540", "comp": "12", "pers": "12"}}, "publish": "2026年8月21日", "effective": "2026.07.01 - 2027.06.30", "docNo": "26.5% 和 12%", "notes": "", "minSalary": "2,540"}, {"name": "上海", "region": "直辖市", "minWage": "8,150", "ins": {"pension": {"u26": "37,731", "l26": "7,546", "u25": "37,302", "l25": "7,460", "comp": "16", "pers": "8"}, "medical": {"u26": "37,731", "l26": "7,546", "u25": "37,302", "l25": "7,460", "comp": "9", "pers": "2", "persFixed": ""}, "unemployment": {"u26": "37,731", "l26": "7,546", "u25": "37,302", "l25": "7,460", "comp": "0.5", "pers": "0.5"}, "injury": {"u26": "37,731", "l26": "7,546", "u25": "37,302", "l25": "7,460", "comp": "0.2", "pers": "0"}, "housing": {"u26": "37,731", "l26": "2,740", "u25": "37,302", "l25": "2,740", "comp": "7", "pers": "7"}}, "publish": "2026年8月18日", "effective": "2026.07.01 - 2027.06.30", "docNo": "25.7% 和 7%", "notes": "", "minSalary": "2,740"}, {"name": "深圳", "region": "计划单列市", "minWage": "6,750", "ins": {"pension": {"u26": "", "l26": "", "u25": "27,549", "l25": "4,775", "comp": "16", "pers": "8"}, "medical": {"u26": "33,633", "l26": "6,727", "u25": "33,666", "l25": "6,733", "comp": "6", "pers": "2", "persFixed": ""}, "unemployment": {"u26": "", "l26": "2,700", "u25": "44,265", "l25": "2,520", "comp": "0.8", "pers": "0.2"}, "injury": {"u26": "无上限", "l26": "2,700", "u25": "无上限", "l25": "4,775", "comp": "0.2", "pers": "0"}, "housing": {"u26": "", "l26": "2,700", "u25": "48,471", "l25": "2,520", "comp": "5", "pers": "5-12"}}, "publish": "深圳医保局2026通告(医保);粤人社发〔2025〕32号(养老沿用)", "effective": "养老/失业/工伤2025.7起沿用(2026.7深圳明确未调整)；医保 2026.01.01 - 2026.12.31；公积金 2026.07.01-2027.06.30", "docNo": "深户24.5%，非深户23.5%；公积金5%", "notes": "", "minSalary": "2,700"}, {"name": "广州", "region": "城市", "minWage": "6,750", "ins": {"pension": {"u26": "", "l26": "", "u25": "27,549", "l25": "5,510", "comp": "16", "pers": "8"}, "medical": {"u26": "31,170", "l26": "6,234", "u25": "31,179", "l25": "6,236", "comp": "6.85", "pers": "2", "persFixed": ""}, "unemployment": {"u26": "", "l26": "2,680", "u25": "41,112", "l25": "2,500", "comp": "0.8", "pers": "0.2"}, "injury": {"u26": "无上限", "l26": "2,680", "u25": "无上限", "l25": "2,500", "comp": "0.4", "pers": "0"}, "housing": {"u26": "41,679", "l26": "2,680", "u25": "41,697", "l25": "2,500", "comp": "5", "pers": "5-12"}}, "publish": "粤人社发〔2025〕32号(养老);广州公积金中心2026通告", "effective": "养老/失业/工伤2025.7起沿用(广州·省直下限5510);医保2026.1.1-12.31;公积金2026.7.1-2027.6.30", "docNo": "24.05% 和 5%", "notes": "", "minSalary": "2,680"}, {"name": "厦门", "region": "计划单列市", "minWage": "4,650", "ins": {"pension": {"u26": "", "l26": "", "u25": "22,607", "l25": "4,043", "comp": "16", "pers": "8"}, "medical": {"u26": "22,893", "l26": "4,579", "u25": "22,164", "l25": "4,433", "comp": "8.2", "pers": "2", "persFixed": ""}, "unemployment": {"u26": "", "l26": "", "u25": "22,164", "l25": "4,043", "comp": "0.5", "pers": "0.5"}, "injury": {"u26": "22,893", "l26": "4,579", "u25": "22,070", "l25": "4,414", "comp": "0.2", "pers": "0"}, "housing": {"u26": "32,937", "l26": "2,265", "u25": "32,346", "l25": "2,265", "comp": "12", "pers": "12"}}, "publish": "福建省医保局2026通告(医保);厦门公积金中心2026通告", "effective": "养老/失业/工伤沿用福建2025标准(闽人社文〔2025〕45号);医保2026.7.1起;公积金2026.7.1-2027.6.30", "docNo": "24.90% 和 12%", "notes": "", "minSalary": "2,265"}, {"name": "大连", "region": "计划单列市", "minWage": "4,650", "ins": {"pension": {"u26": "", "l26": "", "u25": "21,792", "l25": "4,359", "comp": "16", "pers": "8"}, "medical": {"u26": "24,570", "l26": "4,914", "u25": "24,570", "l25": "4,914", "comp": "9", "pers": "2", "persFixed": ""}, "unemployment": {"u26": "", "l26": "", "u25": "21,792", "l25": "4,359", "comp": "0.5", "pers": "0.5"}, "injury": {"u26": "", "l26": "", "u25": "21,792", "l25": "4,359", "comp": "0.9", "pers": "0"}, "housing": {"u26": "31,929", "l26": "2,230", "u25": "30,669", "l25": "2,100", "comp": "10", "pers": "10"}}, "publish": "辽宁省人社厅/大连医保局2026通告", "effective": "养老/失业/工伤沿用辽宁2025口径(2026新值未公布);医保2026.1.1-12.31;公积金2026.7.1-2027.6.30", "docNo": "26.60% 和 10%", "notes": "", "minSalary": "2,230"}, {"name": "江苏[含苏州，昆山，无锡，南京，常州，如皋]", "region": "省份", "minWage": "5,650", "ins": {"pension": {"u26": "", "l26": "", "u25": "24,762", "l25": "4,952", "comp": "16", "pers": "8"}, "medical": {"u26": "", "l26": "", "u25": "24,762", "l25": "4,952", "comp": "6.8 (苏州园区)", "pers": "2 (+5)", "persFixed": ""}, "unemployment": {"u26": "", "l26": "", "u25": "24,762", "l25": "4,952", "comp": "0.5", "pers": "0.5"}, "injury": {"u26": "", "l26": "", "u25": "24,762", "l25": "4,952", "comp": "0.4", "pers": "0"}, "housing": {"u26": "40,600（苏州）", "l26": "2,660", "u25": "38,900", "l25": "2,490", "comp": "8", "pers": "8"}}, "publish": "苏税发〔2026〕3号(社保);南京公积金中心2026通告(公积金例)", "effective": "社保2026全年暂沿用2025标准(24762/4952,新基数待公布);公积金2026.7.1-2027.6.30(以南京为例42400/2660)", "docNo": "苏州园区：23.70% 和 8%；昆山/南京：24.70% 和 8%；无锡：25.40% 和 8%；常州：25.78% 和 10%；南通：25.90% 和 8%", "notes": "", "minSalary": "2,660"}, {"name": "浙江[含杭州，金华，宁波，嘉兴]", "region": "省份", "minWage": "5,650", "ins": {"pension": {"u26": "26730", "l26": "5346", "u25": "25,299", "l25": "4,986", "comp": "16", "pers": "8"}, "medical": {"u26": "26730", "l26": "5346", "u25": "25,299", "l25": "4,986", "comp": "9.5", "pers": "2", "persFixed": ""}, "unemployment": {"u26": "26730", "l26": "5346", "u25": "25,299", "l25": "4,986", "comp": "0.5", "pers": "0.5"}, "injury": {"u26": "26730", "l26": "5346", "u25": "25,299", "l25": "4,986", "comp": "0.6", "pers": "0"}, "housing": {"u26": "42,151（杭州）", "l26": "2,660", "u25": "40,694", "l25": "2,490", "comp": "5", "pers": "5"}}, "publish": "浙人社发〔2025〕52号及省三部门通告", "effective": "社保2026.7.1-2027.6.30(5346/26730);公积金2026.7.1-2027.6.30", "docNo": "杭州： 26.6% 和 5%(外包)；金华：25.85% 和 5%；宁波：23.45% 和 5%； 嘉兴：26.10% 和 8%", "notes": "", "minSalary": "2,660"}, {"name": "重庆", "region": "直辖市", "minWage": "4,650", "ins": {"pension": {"u26": "", "l26": "", "u25": "22,017", "l25": "4,404", "comp": "16", "pers": "8"}, "medical": {"u26": "", "l26": "", "u25": "22,017", "l25": "4,404", "comp": "8.5", "pers": "2 (+5)", "persFixed": ""}, "unemployment": {"u26": "", "l26": "", "u25": "22,017", "l25": "4,404", "comp": "0.5", "pers": "0.5"}, "injury": {"u26": "", "l26": "", "u25": "22,017", "l25": "4,404", "comp": "0.48", "pers": "0"}, "housing": {"u26": "", "l26": "", "u25": "31,393", "l25": "2,330", "comp": "5", "pers": "5"}}, "publish": "重庆市人社局/医保局 2026年", "effective": "社保基数暂沿用2025年度标准(2026.7起新基数待重庆公布);公积金2026年度(1.1起)", "docNo": "26.98% 和 5%", "notes": "", "minSalary": "2,330"}, {"name": "武汉", "region": "城市", "minWage": "4,650", "ins": {"pension": {"u26": "", "l26": "", "u25": "22,488", "l25": "4,498", "comp": "16", "pers": "8"}, "medical": {"u26": "", "l26": "", "u25": "22,488", "l25": "4,498", "comp": "8.7", "pers": "2 (+7)", "persFixed": ""}, "unemployment": {"u26": "", "l26": "", "u25": "22,488", "l25": "4,498", "comp": "0.7", "pers": "0.3"}, "injury": {"u26": "", "l26": "", "u25": "22,488", "l25": "4,498", "comp": "0.4", "pers": "0"}, "housing": {"u26": "36,072", "l26": "2,400", "u25": "34,560", "l25": "2,210", "comp": "8", "pers": "8"}}, "publish": "湖北省人社厅 / 武汉公积金中心", "effective": "社保基数暂按2025年度标准(待2026.7新基数公布后补差);公积金2026.7.1-2027.6.30", "docNo": "25.8%和8%", "notes": "", "minSalary": "2,400"}, {"name": "天津", "region": "直辖市", "minWage": "5,250", "ins": {"pension": {"u26": "25,902", "l26": "5,180", "u25": "25,620", "l25": "5,124", "comp": "16", "pers": "8"}, "medical": {"u26": "25,902", "l26": "5,180", "u25": "25,620", "l25": "5,124", "comp": "10.5", "pers": "2 (+21)", "persFixed": ""}, "unemployment": {"u26": "25,902", "l26": "5,180", "u25": "25,620", "l25": "5124", "comp": "0.5", "pers": "0.5"}, "injury": {"u26": "25,902", "l26": "5,180", "u25": "25,620", "l25": "5,124", "comp": "0.48", "pers": "0"}, "housing": {"u26": "28,917", "l26": "2,510", "u25": "27,861", "l25": "2,320", "comp": "11", "pers": "11"}}, "publish": "津人社局发〔2025〕6号 / 津医保规字〔2026〕1号", "effective": "社保：2026.1.1-2026.12.31；公积金：2026.7.1-2026.6.30", "docNo": "27.48% 和 11%", "notes": "", "minSalary": "2,510"}, {"name": "西安", "region": "城市", "minWage": "5,150", "ins": {"pension": {"u26": "", "l26": "", "u25": "23,250", "l25": "4,650", "comp": "16", "pers": "8"}, "medical": {"u26": "25,660", "l26": "5,132", "u25": "24,948", "l25": "4,990", "comp": "7 (+6.4)", "pers": "2 (+1.6)", "persFixed": ""}, "unemployment": {"u26": "", "l26": "", "u25": "23,250", "l25": "4,650", "comp": "0.7", "pers": "0.3"}, "injury": {"u26": "", "l26": "", "u25": "23,250", "l25": "4,650", "comp": "0.32", "pers": "0"}, "housing": {"u26": "32,726", "l26": "2,376", "u25": "31,761", "l25": "2,160", "comp": "10", "pers": "10"}}, "publish": "市医保发〔2026〕36号(医保) / 陕西社保局", "effective": "养老/失业/工伤全省统一(2026.7起);医保2026.8.1;公积金2026.7.1", "docNo": "24.02% 和 10%", "notes": "", "minSalary": "2,376"}, {"name": "成都", "region": "城市", "minWage": "5,150", "ins": {"pension": {"u26": "", "l26": "", "u25": "22,938", "l25": "4,588", "comp": "16", "pers": "8"}, "medical": {"u26": "", "l26": "", "u25": "22,938", "l25": "4,588", "comp": "8.3", "pers": "2", "persFixed": ""}, "unemployment": {"u26": "", "l26": "", "u25": "22,938", "l25": "4,588", "comp": "0.6", "pers": "0.4"}, "injury": {"u26": "", "l26": "", "u25": "22,938", "l25": "4,588", "comp": "0.384", "pers": "0"}, "housing": {"u26": "32,969", "l26": "2,330", "u25": "31,378", "l25": "2,100", "comp": "5", "pers": "5"}}, "publish": "川人社办发〔2025〕39号 / 成公积金委〔2026〕5号", "effective": "社保2026全年(1.1-12.31)；公积金：2026.1.1-2026.12.31", "docNo": "25.28% 和 5%", "notes": "", "minSalary": "2,330"}, {"name": "新疆", "region": "省份", "minWage": "5,650", "ins": {"pension": {"u26": "", "l26": "", "u25": "25,344", "l25": "5,069", "comp": "16", "pers": "8"}, "medical": {"u26": "", "l26": "", "u25": "25,344", "l25": "5,069", "comp": "9.8", "pers": "2.5", "persFixed": ""}, "unemployment": {"u26": "", "l26": "", "u25": "25,344", "l25": "5,069", "comp": "0.5", "pers": "0.5"}, "injury": {"u26": "", "l26": "", "u25": "25,344", "l25": "5,069", "comp": "0.4", "pers": "0"}, "housing": {"u26": "35,071", "l26": "2,070", "u25": "33,480", "l25": "2,070", "comp": "5", "pers": "5"}}, "publish": "国家税务总局新疆维吾尔自治区税务局通告〔2025〕7号", "effective": "2026暂按2025年度标准(待新基数公布);公积金2026年度", "docNo": "26.7% 和 5%", "notes": "", "minSalary": "2,070"}, {"name": "沈阳", "region": "城市", "minWage": "4,506", "ins": {"pension": {"u26": "", "l26": "", "u25": "21,792", "l25": "4,359", "comp": "16", "pers": "8"}, "medical": {"u26": "24,228", "l26": "8,076", "u25": "24,219", "l25": "4,846", "comp": "8.6", "pers": "2", "persFixed": ""}, "unemployment": {"u26": "", "l26": "", "u25": "21,792", "l25": "4,359", "comp": "0.5", "pers": "0.5"}, "injury": {"u26": "", "l26": "", "u25": "21,792", "l25": "4,359", "comp": "0.9", "pers": "0"}, "housing": {"u26": "30,657", "l26": "2,230", "u25": "29,523", "l25": "2,100", "comp": "12", "pers": "12"}}, "publish": "辽人社〔2025〕17号(养老/失业/工伤);沈阳市医保局2025年12月(医保);沈阳公积金中心2026年7月17日通知(公积金)", "effective": "养老/失业/工伤2025.7-2026.6全省统一(2026.7新值待辽宁公布);医保2026全年沿用;公积金2026年度", "docNo": "26.00% 和 12%", "notes": "", "minSalary": "2,230"}, {"name": "郑州", "region": "城市", "minWage": "4,506", "ins": {"pension": {"u26": "", "l26": "", "u25": "19,155", "l25": "3,831", "comp": "16", "pers": "8"}, "medical": {"u26": "", "l26": "", "u25": "19,155", "l25": "3,831", "comp": "7", "pers": "2", "persFixed": ""}, "unemployment": {"u26": "", "l26": "", "u25": "19,155", "l25": "3,831", "comp": "0.7", "pers": "0.3"}, "injury": {"u26": "", "l26": "", "u25": "19,155", "l25": "3,831", "comp": "0.72", "pers": "0"}, "housing": {"u26": "28,849", "l26": "2,350", "u25": "27,520", "l25": "2,100", "comp": "8", "pers": "8"}}, "publish": "河南省四部门关于公布2025年度社保缴费基数上下限标准的通知;郑州公积金中心", "effective": "社保2025.7.1-2026.6.30(河南全口径6385,2026年度新基数待公布);公积金2025年度(2026年度待公布)", "docNo": "25.42% 和 8%", "notes": "", "minSalary": "2,350"}, {"name": "广东[东莞]", "region": "城市", "minWage": "5,150", "ins": {"pension": {"u26": "", "l26": "", "u25": "27,549", "l25": "4,775", "comp": "16", "pers": "8"}, "medical": {"u26": "27,549", "l26": "4,775", "u25": "27,501", "l25": "4,767", "comp": "3.15", "pers": "0.5", "persFixed": ""}, "unemployment": {"u26": "27,702", "l26": "2,300", "u25": "26,298", "l25": "2,080", "comp": "0.8", "pers": "0.2"}, "injury": {"u26": "无上限", "l26": "2,300", "u25": "无上限", "l25": "2,080", "comp": "0.4", "pers": "0"}, "housing": {"u26": "27,391", "l26": "2,300", "u25": "27,391", "l25": "2,080", "comp": "5", "pers": "5"}}, "publish": "东莞市医保局2026年度通告(2026.6.25);粤人社发〔2025〕32号(养老);东莞公积金中心2026年度通告", "effective": "养老/失业/工伤2026.7起;医保2026.7-12(4775/27549);公积金2026年度(2080-27391)", "docNo": "20.35% 和 5%", "notes": "", "minSalary": "2,300"}, {"name": "广东[佛山]", "region": "城市", "minWage": "5,150", "ins": {"pension": {"u26": "", "l26": "", "u25": "27,549", "l25": "4,775", "comp": "16", "pers": "8"}, "medical": {"u26": "9,660", "l26": "4,669", "u25": "9,660", "l25": "4,830", "comp": "5.5", "pers": "2", "persFixed": ""}, "unemployment": {"u26": "31,395", "l26": "2,300", "u25": "28,770", "l25": "2,080", "comp": "0.8", "pers": "0.2"}, "injury": {"u26": "无上限", "l26": "2,300", "u25": "无上限", "l25": "2,080", "comp": "0.4", "pers": "0"}, "housing": {"u26": "31,395", "l26": "2,300", "u25": "28,770", "l25": "2,080", "comp": "5", "pers": "5"}}, "publish": "佛山医保局2026年度通告(2025.12.18);佛山公积金中心2026年度通告(2026.6.23)及2026.8.14下限调整;粤府函〔2026〕188号", "effective": "养老/失业/工伤2026.7起(工伤取消上下限);医保2026.1.1-12.31(4669/9660);公积金2026.7-2027.6(上限31395,下限2026.9.1起2300)", "docNo": "22.70% 和 5%", "notes": "", "minSalary": "2,300"}, {"name": "广东[中山]", "region": "城市", "minWage": "5,150", "ins": {"pension": {"u26": "", "l26": "", "u25": "27,549", "l25": "4,775", "comp": "16", "pers": "8"}, "medical": {"u26": "21,250", "l26": "4,250", "u25": "21,210", "l25": "4,242", "comp": "5.8", "pers": "2", "persFixed": ""}, "unemployment": {"u26": "", "l26": "2,300", "u25": "27,282", "l25": "2,080", "comp": "0.8", "pers": "0.2"}, "injury": {"u26": "无上限", "l26": "2,300", "u25": "无上限", "l25": "2,080", "comp": "0.4", "pers": "0"}, "housing": {"u26": "29,430", "l26": "2,300", "u25": "27,,282", "l25": "2,080", "comp": "5", "pers": "5"}}, "publish": "中山市医保局2026医保年度通告(2025.11.16);中山公积金中心2026年度通知(2026.7.4)", "effective": "养老/失业/工伤2025.7-2026.6全省统一(2026.7新值待广东公布);医保2026.1.1-12.31(4250/21250);公积金2026.7-2027.6(2080-29430)", "docNo": "23.00% 和 5%", "notes": "", "minSalary": "2,300"}, {"name": "广东[珠海]", "region": "城市", "minWage": "5,150", "ins": {"pension": {"u26": "", "l26": "", "u25": "27,549", "l25": "4,775", "comp": "16", "pers": "8"}, "medical": {"u26": "27,549", "l26": "4,775", "u25": "22,731", "l25": "4,546", "comp": "6", "pers": "1.5", "persFixed": ""}, "unemployment": {"u26": "", "l26": "2,300", "u25": "34,926", "l25": "2,080", "comp": "0.8", "pers": "0.2"}, "injury": {"u26": "无上限", "l26": "2,300", "u25": "无上限", "l25": "2,080", "comp": "0.2", "pers": "0"}, "housing": {"u26": "36,279", "l26": "2,300", "u25": "33,468", "l25": "2,080", "comp": "5", "pers": "5"}}, "publish": "珠医保〔2025〕62号(医保2026年度);珠海公积金管委会2026年度通知(2026.6.30)", "effective": "养老2025.7-2026.6全省统一(2026.7新值待广东公布);医保2026.1.1-12.31(4775/27549,含生育0.5%);公积金2026.7-2027.6(2080-36279)", "docNo": "23.00% 和 5%", "notes": "", "minSalary": "2,300"}, {"name": "安徽[芜湖]", "region": "城市", "minWage": "4,506", "ins": {"pension": {"u26": "21,556", "l26": "4,311", "u25": "21,556", "l25": "4,311", "comp": "16", "pers": "8"}, "medical": {"u26": "21,556", "l26": "4,311", "u25": "21,556", "l25": "4,311", "comp": "7", "pers": "2 (+40)", "persFixed": ""}, "unemployment": {"u26": "21,556", "l26": "4,311", "u25": "21,556", "l25": "4,311", "comp": "0.5", "pers": "0.5"}, "injury": {"u26": "21,556", "l26": "4,311", "u25": "21,556", "l25": "4,311", "comp": "0.4", "pers": "0"}, "housing": {"u26": "26,991", "l26": "2,170", "u25": "25,992", "l25": "1,930", "comp": "10", "pers": "10"}}, "publish": "皖医保发〔2026〕12号(医保省级统筹);芜湖公积金中心2026年度通知", "effective": "社保2026全年沿用2025标准(4311/21556,2025社平7185);医保单位7.2%含生育+个人2%;公积金2026年度(芜湖26991/2170)", "docNo": "23.90% 和 10%", "notes": "", "minSalary": "2,170"}, {"name": "安徽[合肥]", "region": "城市", "minWage": "4,506", "ins": {"pension": {"u26": "21,556", "l26": "4,311", "u25": "21,556", "l25": "4,311", "comp": "16", "pers": "8"}, "medical": {"u26": "21,556", "l26": "4,311", "u25": "21,556", "l25": "4,311", "comp": "6.4", "pers": "2", "persFixed": ""}, "unemployment": {"u26": "21,556", "l26": "4,311", "u25": "21,556", "l25": "4,311", "comp": "0.5", "pers": "0.5"}, "injury": {"u26": "21,556", "l26": "4,311", "u25": "21,556", "l25": "4,311", "comp": "0.4", "pers": "0"}, "housing": {"u26": "31,564", "l26": "2,320", "u25": "30,540", "l25": "2,060", "comp": "5", "pers": "5"}}, "publish": "皖医保发〔2026〕12号(医保省级统筹);合肥公积金中心2026年度通知(2026.6.29)", "effective": "社保2026全年沿用2025标准(4311/21556,2025社平7185);医保单位7.2%含生育+个人2%;公积金2026年度(合肥31564/2060)", "docNo": "23.30% 和 5%", "notes": "", "minSalary": "2,320"}, {"name": "安徽[六安]", "region": "城市", "minWage": "4,506", "ins": {"pension": {"u26": "21,556", "l26": "4,311", "u25": "21,556", "l25": "4,311", "comp": "16", "pers": "8"}, "medical": {"u26": "21556", "l26": "4,311", "u25": "21,556", "l25": "4,311", "comp": "7.2", "pers": "2", "persFixed": ""}, "unemployment": {"u26": "21,556", "l26": "4,311", "u25": "21,556", "l25": "4,311", "comp": "0.5", "pers": "0.5"}, "injury": {"u26": "21556", "l26": "4,311", "u25": "21,556", "l25": "4,311", "comp": "0.2-1.9", "pers": "0"}, "housing": {"u26": "25,945", "l26": "2,170", "u25": "24,835", "l25": "2,170", "comp": "5-12", "pers": "5-12"}}, "publish": "皖医保发〔2026〕12号(医保省级统筹);六安市公积金中心2026年度调整(六市金管〔2025〕26号)", "effective": "社保2026全年沿用2025标准(4311/21556,2025社平7185);医保单位7.2%含生育+个人2%;公积金2026年度(六安25945/2170)", "docNo": "", "notes": "", "minSalary": "2,170"}, {"name": "河北[唐山]", "region": "城市", "minWage": "4,506", "ins": {"pension": {"u26": "20,382", "l26": "4,076", "u25": "20,034", "l25": "4,007", "comp": "16", "pers": "8"}, "medical": {"u26": "无上限", "l26": "6,966", "u25": "无上限", "l25": "6,738", "comp": "7.8 (+11)", "pers": "2", "persFixed": ""}, "unemployment": {"u26": "20,382", "l26": "4,076", "u25": "20,034", "l25": "4,007", "comp": "0.7", "pers": "0.3"}, "injury": {"u26": "20,382", "l26": "4,076", "u25": "20,034", "l25": "4,007", "comp": "1.49", "pers": "0"}, "housing": {"u26": "25,635", "l26": "2,380", "u25": "24,612", "l25": "2,200", "comp": "12", "pers": "6"}}, "publish": "冀人社字〔2026〕57号(社保基数);唐山医保局2026年度(医疗);唐山公积金中心2026年度调整", "effective": "养老/失业/工伤全省统一2026年度(4076/20382);医保2026.7.1-2027.6.30(唐山6966起7.8%)；公积金：2026.7.1-2027.6.30", "docNo": "25.99% 和 12%", "notes": "", "minSalary": "2,380"}, {"name": "河北[保定]", "region": "城市", "minWage": "4,506", "ins": {"pension": {"u26": "20,382", "l26": "4,076", "u25": "20,034", "l25": "4,007", "comp": "16", "pers": "8"}, "medical": {"u26": "无上限", "l26": "6,794", "u25": "无上限", "l25": "5,766", "comp": "6.9", "pers": "2", "persFixed": ""}, "unemployment": {"u26": "20,382", "l26": "4,076", "u25": "20,034", "l25": "4,007", "comp": "0.7", "pers": "0.3"}, "injury": {"u26": "20,382", "l26": "4,076", "u25": "20,034", "l25": "4,007", "comp": "1.2", "pers": "0"}, "housing": {"u26": "24,768", "l26": "2,230", "u25": "23,300", "l25": "2,000", "comp": "12", "pers": "10"}}, "publish": "冀人社字〔2026〕57号(社保基数);定州市医保局2026年度(医疗,69188.66元/年);定州公积金中心2026年度通知(2026.7.14)", "effective": "养老/失业/工伤全省统一2026年度(4076/20382);医保2026.7.1-2027.6.30(定州5766/月,单位6%含生育+个人2%);公积金2026.7-2027.6(定州2230-24768)", "docNo": "24.80% 和 12%", "notes": "", "minSalary": "2,230"}, {"name": "河北[廊坊]", "region": "城市", "minWage": "4,506", "ins": {"pension": {"u26": "20,382", "l26": "4,076", "u25": "20,034", "l25": "4,007", "comp": "16", "pers": "8"}, "medical": {"u26": "无上限", "l26": "6,794", "u25": "无上限", "l25": "6,681", "comp": "7", "pers": "2", "persFixed": ""}, "unemployment": {"u26": "20,382", "l26": "4,076", "u25": "20,034", "l25": "4,007", "comp": "0.7", "pers": "0.3"}, "injury": {"u26": "20,382", "l26": "4,076", "u25": "20,034", "l25": "4,007", "comp": "1.5", "pers": "0"}, "housing": {"u26": "30,261", "l26": "2,380", "u25": "28,968", "l25": "2,200", "comp": "10", "pers": "10"}}, "publish": "冀人社字〔2026〕57号(社保基数);廊坊医保局2026年度(医疗);廊坊公积金中心2026年度调整", "effective": "养老/失业/工伤全省统一2026年度(4076/20382);医保2026.7.1-2027.6.30(廊坊6056起,单位6%+个人2%);公积金2026.7-2027.6(廊坊2380-30261)", "docNo": "25.20% 和 10%", "notes": "", "minSalary": "2,380"}];
+
+let META = {lastUpdated:"", editor:"", log:[]};
+let curSearch="", curFilter="全部", curSort="default";
+let lastEditor="";
+
+/* 数据库记录 -> 页面城市对象 */
+function recToCity(r){
+  const g = k => (r[k]===null||r[k]===undefined) ? "" : String(r[k]);
+  const ins = {};
+  INSURANCE.forEach(t=>{
+    const pre = PREFIX[t.key];
+    ins[t.key] = {
+      u26:g(pre+"2026上限"), l26:g(pre+"2026下限"), u25:g(pre+"2025上限"), l25:g(pre+"2025下限"),
+      comp:g(pre+"公司比例"), pers:g(pre+"个人比例")
+    };
+  });
+  ins.medical.persFixed = g("医疗个人固定");
+  return {
+    _rid:r._id, name:g("城市省份"), region:g("区域类型"), minWage:g("最低基本工资"), ins,
+    publish:g("政策发布时间"), effective:g("生效时间"), docNo:g("公司社保和公积金比例"), notes:g("修改记录"), minSalary:g("最低工资")
+  };
+}
+
+/* ============== 状态 ============== */
+function isCityDone(c){
+  return INSURANCE.some(t=>{
+    const i=c.ins[t.key];
+    return (i.u26&&i.u26!=="")||(i.l26&&i.l26!=="")||(i.comp&&i.comp!=="")||(i.pers&&i.pers!=="");
+  });
+}
+function sortVal(c,f){
+  const v=parseFloat(c.ins.pension[f]);
+  return isNaN(v)?-1:v;
+}
+
+/* ============== 数据加载（优先共享库，失败回退本地备份） ============== */
+function sortByFallbackOrder(arr){
+  const order={};
+  FALLBACK_DATA.forEach(function(c,i){order[c.name]=i;});
+  return arr.slice().sort(function(a,b){
+    const ia=(order[a.name]!==undefined)?order[a.name]:9999;
+    const ib=(order[b.name]!==undefined)?order[b.name]:9999;
+    return ia-ib;
+  });
+}
+function loadData(){
+  /* 静态镜像：数据已内嵌于 FALLBACK_DATA，不建立任何数据库会话 */
+  DATA = FALLBACK_DATA.map(c=>({_rid:"", name:c.name, region:c.region, minWage:c.minWage, ins:c.ins,
+    publish:c.publish, effective:c.effective, docNo:c.docNo, notes:c.notes, minSalary:c.minSalary}));
+}
+
+/* ============== 渲染 ============== */
+function renderTags(){
+  const tagBox=document.getElementById("tags");
+  tagBox.innerHTML="";
+  const set=new Set();
+  FALLBACK_DATA.forEach(c=>set.add(c.region));
+  const all=["全部"].concat(Array.from(set));
+  all.forEach(r=>{
+    const b=document.createElement("button");
+    b.className="btn tag"+(curFilter===r?" active":"");
+    b.textContent=r;
+    b.onclick=function(){curFilter=r;renderTags();renderGrid();};
+    tagBox.appendChild(b);
+  });
+}
+function cellHTML(c,t,f,v){
+  return '<span class="cell" data-sp-bindable="database" data-sp-database-id="XTIUcLy5mkLWrIvEmPoxxI">'+
+    (v&&v!==""?v:'<span class="todo-cell empty">待补充</span>')+'</span>';
+}
+function renderGrid(){
+  const grid=document.getElementById("grid");
+  grid.innerHTML="";
+  let list=DATA.slice();
+  if(curSearch){ list=list.filter(c=>c.name.indexOf(curSearch)!==-1); }
+  if(curFilter!=="全部"){ list=list.filter(c=>c.region===curFilter); }
+  if(curSort==="up-desc") list.sort(function(a,b){return sortVal(b,"u26")-sortVal(a,"u26");});
+  else if(curSort==="up-asc") list.sort(function(a,b){return sortVal(a,"u26")-sortVal(b,"u26");});
+  else if(curSort==="low-desc") list.sort(function(a,b){return sortVal(b,"l26")-sortVal(a,"l26");});
+  else if(curSort==="low-asc") list.sort(function(a,b){return sortVal(a,"l26")-sortVal(b,"l26");});
+  list.forEach(c=>{
+    const done=isCityDone(c);
+    const card=document.createElement("div");
+    card.className="card";
+    let rows="";
+    INSURANCE.forEach(t=>{
+      const i=c.ins[t.key];
+      rows+='<tr>'+
+        '<td>'+t.label+'</td>'+
+        '<td class="c26">'+cellHTML(c,t.key,"u26",i.u26)+'</td>'+
+        '<td class="c26">'+cellHTML(c,t.key,"l26",i.l26)+'</td>'+
+        '<td class="c25">'+cellHTML(c,t.key,"u25",i.u25)+'</td>'+
+        '<td class="c25">'+cellHTML(c,t.key,"l25",i.l25)+'</td>'+
+        '<td>'+cellHTML(c,t.key,"comp",i.comp)+'</td>'+
+        '<td>'+cellHTML(c,t.key,"pers",i.pers+(i.persFixed?("+"+i.persFixed):""))+'</td>'+
+      '</tr>';
+    });
+    card.innerHTML =
+      '<div class="chead">'+
+        '<span class="ttl">'+c.name+'</span>'+
+        '<span><span class="badge region">'+c.region+'</span> <span class="badge '+(done?'done':'todo')+'">'+(done?'已确认':'待补充')+'</span></span>'+
+      '</div>'+
+      '<div class="minwage"><span class="mw-label">最低基本工资（元/月）：</span>'+
+        '<span class="cell" data-sp-bindable="database" data-sp-database-id="XTIUcLy5mkLWrIvEmPoxxI">'+(c.minWage&&c.minWage!==""?c.minWage:'<span class="todo-cell empty">待补充</span>')+'</span></div>'+
+      '<table>'+
+        '<thead><tr><th>险种</th><th>2026上限</th><th>2026下限</th><th>2025上限</th><th>2025下限</th><th>公司%</th><th>个人%</th></tr></thead>'+
+        '<tbody>'+rows+'</tbody>'+
+      '</table>'+
+      '<div class="meta">'+
+        '<div>政策发布时间：<span class="cell" data-sp-bindable="database" data-sp-database-id="XTIUcLy5mkLWrIvEmPoxxI">'+(c.publish||'<span class="todo-cell empty">待补充</span>')+'</span></div>'+
+        '<div>生效时间：<span class="cell" data-sp-bindable="database" data-sp-database-id="XTIUcLy5mkLWrIvEmPoxxI">'+(c.effective||'<span class="todo-cell empty">待补充</span>')+'</span></div>'+
+        '<div>公司社保和公积金比例：<span class="cell" data-sp-bindable="database" data-sp-database-id="XTIUcLy5mkLWrIvEmPoxxI">'+(c.docNo||'<span class="todo-cell empty">待补充</span>')+'</span></div>'+
+        '<div>最低工资：<span class="cell" data-sp-bindable="database" data-sp-database-id="XTIUcLy5mkLWrIvEmPoxxI">'+(c.minSalary||'<span class="todo-cell empty">待补充</span>')+'</span></div>'+
+        '<div>修改记录：<span class="cell" data-sp-bindable="database" data-sp-database-id="XTIUcLy5mkLWrIvEmPoxxI">'+(c.notes||'<span class="todo-cell empty">待补充</span>')+'</span></div>'+
+      '</div>';
+    grid.appendChild(card);
+  });
+  document.getElementById("count").innerHTML='共 <b>'+list.length+'</b> 个城市 / 省份'+(curFilter!=="全部"?'（筛选：'+curFilter+'）':'');
+}
+
+function showToast(msg){
+  const t=document.getElementById("toast");
+  if(!t) return;
+  t.textContent=msg; t.className="show";
+  clearTimeout(t._timer);
+  t._timer=setTimeout(function(){t.className="";},2600);
+}
+
+/* ============== CSV 导出 ============== */
+function exportCSV(){
+  const head=["城市/省份","区域类型","最低基本工资(元/月)","险种","2026上限","2026下限","2025上限","2025下限","公司比例%","个人比例%","政策发布时间","生效时间","公司社保和公积金比例","最低工资","修改记录"];
+  const rows=[head];
+  DATA.forEach(c=>{
+    INSURANCE.forEach(t=>{
+      const i=c.ins[t.key];
+      rows.push([c.name,c.region,c.minWage,t.label,i.u26,i.l26,i.u25,i.l25,i.comp,i.pers+(i.persFixed?("+"+i.persFixed):""),c.publish,c.effective,c.docNo,c.minSalary,c.notes].map(x=>x===""||x===null?"待补充":x));
+    });
+  });
+  const csv="\ufeff"+rows.map(r=>r.map(v=>{
+    const s=String(v);
+    return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;
+  }).join(",")).join("\n");
+  const blob=new Blob([csv],{type:"text/csv;charset=utf-8"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;
+  a.download="2026社保公积金基数速查表.csv";
+  a.style.display="none";
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(function(){
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, 3000);
+  /* 兜底：部分环境（iframe 沙箱）会拦截 a.click 下载，自动复制到剪贴板 */
+  try{
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(csv.replace(/^\ufeff/,"")).then(function(){
+        showToast("CSV 已生成："+(DATA.length*INSURANCE.length)+" 行 · 已复制到剪贴板（若未自动下载，请粘贴保存为 .csv）");
+      }).catch(function(){});
+    }
+  }catch(e){}
+}
+
+/* ============== 只读防御层（镜像核心保障） ============== */
+function enforceReadOnly(){
+  /* 1. 屏蔽数据库写入 API：即使 SDK 注入 updateRecord 也拒绝执行 */
+  try{
+    if(window.__SMART_PAGE__ && window.__SMART_PAGE__.database){
+      var dbApi=window.__SMART_PAGE__.database;
+      if(dbApi.updateRecord){
+        dbApi.updateRecord=function(){
+          return Promise.reject(new Error("此页面为只读版本，禁止编辑"));
+        };
+      }
+      if(dbApi.addRecord) dbApi.addRecord=function(){ return Promise.reject(new Error("此页面为只读版本，禁止编辑")); };
+      if(dbApi.deleteRecord) dbApi.deleteRecord=function(){ return Promise.reject(new Error("此页面为只读版本，禁止编辑")); };
+    }
+  }catch(e){}
+  /* 2. 强制移除所有 contenteditable（防 SDK/脚本注入编辑态） */
+  function stripEditable(){
+    try{
+      var els=document.querySelectorAll('[contenteditable="true"],[contenteditable=""]');
+      for(var i=0;i<els.length;i++){ els[i].removeAttribute("contenteditable"); }
+    }catch(e){}
+  }
+  stripEditable();
+  /* 3. 监听 DOM 变化：新插入的可编辑元素一律清理 */
+  if(window.MutationObserver){
+    try{
+      new MutationObserver(function(){ stripEditable(); })
+        .observe(document.body,{childList:true,subtree:true});
+    }catch(e){}
+  }
+  /* 4. 全局点击拦截：阻止任何进入编辑状态的尝试 */
+  document.addEventListener("click",function(e){
+    var t=e.target;
+    if(t && t.getAttribute && t.getAttribute("data-sp-bindable") && t.hasAttribute("contenteditable")){
+      t.removeAttribute("contenteditable");
+    }
+  },true);
+}
+
+/* ============== 初始化 ============== */
+function init(){
+  enforceReadOnly();
+  loadData();
+  renderTags();
+  renderGrid();
+  document.getElementById("search").addEventListener("input",function(e){curSearch=e.target.value.trim();renderGrid();});
+  document.querySelectorAll('.sortgrp .btn').forEach(function(b){
+    b.addEventListener('click',function(){curSort=b.getAttribute('data-sort');renderGrid();});
+  });
+
+  document.getElementById("exportBtn").addEventListener("click",exportCSV);
+  /* 静态镜像：无数据库轮询，数据为内嵌快照 */
+}
+init();
+</script>
+</body>
+</html>
